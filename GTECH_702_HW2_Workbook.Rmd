@@ -1,0 +1,74 @@
+---
+title: "GTECH 702 Assignment 2 (Chong Di)"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r Data Pre-processing}
+# load ozone data file
+setwd("../R/")
+df <- read.table("ozone_1996_2001_daily_max_8hr.dat", sep = "", header = F)
+
+# change column names
+vname <- c("year", "month", "day", "ozone_ppm")
+colnames(df) <- vname
+
+# handle missing values
+missval <- 99999.0
+df$ozone_ppm[df$ozone_ppm == missval] <- NA
+
+# get rid of lines with missing values
+ozone_dframe <- df[complete.cases(df$ozone_ppm),]
+```
+```{r Descripitive Statistics for Entire Dataset}
+# summary
+library("pastecs", lib.loc="~/R/win-library/3.3")
+stat.desc(ozone_dframe$ozone_ppm)
+# boxplot
+boxplot(ozone_dframe$ozone_ppm, col="orange", main="Ozone PPM for Entire Dataset", ylab="Ozone PPM")
+# histogram & expected normal distribution curve
+hist(ozone_dframe$ozone_ppm, freq = F,
+     col = "lightblue",
+     xlab = "Ozone PPM Breaks",
+     ylab = "Percentage",
+     main = "Histogram of Ozone PPM Data in NYC")
+# plot expected normal distribution curve
+x <- seq(0, 0.11, length.out = 10000)
+avg <- mean(ozone_dframe$ozone_ppm)
+std <- sd(ozone_dframe$ozone_ppm)
+lines(x, dnorm(x, mean = avg, sd = std), col = "red", lwd = 3)
+# QQ Plot
+qqnorm(ozone_dframe$ozone_ppm, main = "QQ Plot for Ozone PPM Data")
+qqline(ozone_dframe$ozone_ppm, col = "red", lwd = 2)
+```
+```{r High Ozone PPM Data Statistics( >= 0.07), r Exploring High Ozone PPM Data ( >=0.07)}
+ppm_high <- ozone_dframe[ozone_dframe$ozone_ppm >= 0.07, ]
+summary(ppm_high$ozone_ppm)
+# boxplot by month
+boxplot(ppm_high$ozone_ppm~ppm_high$month,
+        col = "yellow",
+        xlab = "Month",
+        ylab = "Ozone PPM",
+        main = "Ozone PPM >= 0.07 by Month")
+
+# count number of ozone ppm observation higher than 0.07 for each month
+high_ppm_rec <- c()
+for (month in unique(ozone_dframe$month)) {
+  tmp <- ozone_dframe[ozone_dframe$month == month,]
+  high_ppm_rec <- append(high_ppm_rec, length(which(tmp$ozone_ppm >= 0.07)))
+}
+# barplot
+mc <- barplot(high_ppm_rec,
+              col = "purple",
+              xlab = "Month",
+              ylab = "Number of Records",
+              main = "Records with Ozone PPM >= 0.07 by Month")
+axis(1, at = mc, labels = unique(ozone_dframe$month))
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
